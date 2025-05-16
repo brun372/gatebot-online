@@ -1,5 +1,5 @@
 import streamlit as st
-from gemini_utility import get_gemini_response, configure_api_key
+from gemini_utility import get_gemini_response, configure_api_key # Esta linha precisa do gemini_utility.py
 
 # Configura a API Key do Gemini usando st.secrets (boa prática de segurança)
 configure_api_key()
@@ -8,7 +8,6 @@ configure_api_key()
 st.set_page_config(page_title="GATEBOT - Seu Assistente de IA", page_icon="🤖")
 
 # --- CSS Personalizado para a Sidebar ---
-# Este bloco de CSS foi adicionado no início para estilizar a sidebar.
 st.markdown("""
 <style>
     /* Estilo para a cor de fundo da sidebar. Você pode mudar o #262730 para outra cor. */
@@ -40,39 +39,31 @@ st.write("⭐ Ei! Tudo bem? Eu sou o GATEBOT, seu parceiro virtual. 😉")
 st.write("Tô aqui pra trocar ideia e te ajudar no que for possível!")
 
 # --- Inicialização do Histórico de Conversa (Session State) ---
-# Isso garante que o histórico da conversa seja mantido entre as interações.
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 
 # --- Exibir Histórico de Conversa ---
-# Isso mostra todas as mensagens anteriores na tela.
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
 # --- Entrada de Texto para o Usuário ---
-# Aqui o usuário digita sua pergunta.
 prompt = st.chat_input("Pergunte algo ao GATEBOT...")
 
 if prompt:
-    # Adiciona a pergunta do usuário ao histórico e exibe
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Gera a resposta do Gemini
     with st.chat_message("assistant"):
-        with st.spinner("Pensando..."): # Mostra um spinner enquanto o Gemini pensa
-            response = get_gemini_response(prompt) # Chama a função que interage com a API do Gemini
-        st.markdown(response) # Exibe a resposta do Gemini
+        with st.spinner("Pensando..."):
+            response = get_gemini_response(prompt)
+        st.markdown(response)
 
-    # Adiciona a resposta do Gemini ao histórico
     st.session_state.messages.append({"role": "assistant", "content": response})
 
 # --- Botão Limpar Conversa ---
-# Este botão foi adicionado no final da área principal.
-# Ele limpa o histórico de mensagens e recarrega a página.
-st.write("---") # Adiciona uma linha horizontal para separar o botão
+st.write("---")
 if st.button("Limpar Conversa"):
-    st.session_state.messages = []  # Zera o histórico de mensagens
-    st.experimental_rerun()         # Recarrega o aplicativo para refletir a mudança
+    st.session_state.messages = []
+    st.experimental_rerun()
