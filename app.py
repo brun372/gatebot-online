@@ -11,11 +11,11 @@ st.set_page_config(page_title="GATEBOT - Seu Assistente de IA", page_icon="🤖"
 st.markdown("""
 <style>
     /* Estilo para a cor de fundo da sidebar. Você pode mudar o #262730 para outra cor. */
-    .st-emotion-cache-nahz7x {
+    .st-emotion-cache-nahz7x { /* Esta é a classe CSS comum para a sidebar */
         background-color: #262730;
     }
     /* Estilo para o texto do sidebar. Você pode mudar a cor e o tamanho da fonte. */
-    .st-emotion-cache-1pxazr6 {
+    .st-emotion-cache-1pxazr6 { /* Esta é a classe CSS comum para texto na sidebar */
         color: white;
     }
     /* Estilo para botões na sidebar (cor do texto e do fundo ao passar o mouse) */
@@ -51,9 +51,9 @@ st.write("Tô aqui pra trocar ideia e te ajudar no que for possível!")
 # --- Inicialização do Histórico de Conversa (Session State) ---
 if 'messages' not in st.session_state:
     st.session_state.messages = []
-# Variável para armazenar a pergunta pré-preenchida
-if 'pre_filled_prompt' not in st.session_state:
-    st.session_state.pre_filled_prompt = ""
+# Variável para armazenar a pergunta pré-preenchida. Usaremos uma chave para o input.
+if 'pre_filled_prompt_key' not in st.session_state:
+    st.session_state.pre_filled_prompt_key = 0 # Usado para resetar o valor do input
 
 # --- Exibir Histórico de Conversa (Área Principal) ---
 for message in st.session_state.messages:
@@ -61,13 +61,23 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 # --- Entrada de Texto para o Usuário (Área Principal) ---
-# O 'value' do chat_input agora é preenchido pela session_state.pre_filled_prompt
-prompt = st.chat_input("Pergunte algo ao GATEBOT...", value=st.session_state.pre_filled_prompt)
+# O truque para pré-preencher o chat_input é usar uma 'key' que muda.
+# Quando a key muda, o Streamlit considera que é um novo widget e recarrega com o valor padrão.
+# A pergunta pré-preenchida é armazenada temporariamente.
+temp_prompt_value = ""
+if "new_pre_filled_prompt" in st.session_state:
+    temp_prompt_value = st.session_state.new_pre_filled_prompt
+    # st.session_state.new_pre_filled_prompt é consumido depois de ser usado
+    del st.session_state.new_pre_filled_prompt
+
+
+prompt = st.chat_input("Pergunte algo ao GATEBOT...", key=f"chat_input_{st.session_state.pre_filled_prompt_key}", value=temp_prompt_value)
+
 
 # Se o usuário digitou ou um botão preencheu o prompt, processa
 if prompt:
-    # Zera o pre_filled_prompt para que não fique preenchido na próxima interação
-    st.session_state.pre_filled_prompt = ""
+    # Incrementa a key para que o input possa ser resetado na próxima vez que um botão for clicado
+    st.session_state.pre_filled_prompt_key += 1
 
     # Adiciona a pergunta do usuário ao histórico e exibe
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -93,48 +103,59 @@ with st.sidebar:
     st.header("Áreas de Conhecimento:")
 
     # Botões para cada área que pré-preenchem o prompt
+    # A lógica aqui é colocar o valor no new_pre_filled_prompt e forçar um rerun.
     if st.button("📚 Educação"):
         st.session_state.messages = [] # Limpa histórico para nova área
-        st.session_state.pre_filled_prompt = "Me conte sobre a Segunda Guerra Mundial."
+        st.session_state.new_pre_filled_prompt = "Me conte sobre a Segunda Guerra Mundial."
+        st.session_state.pre_filled_prompt_key += 1 # Garante que o input será resetado
         st.experimental_rerun() # Recarrega a página para o prompt ser preenchido
 
     if st.button("💡 Ideias"):
         st.session_state.messages = []
-        st.session_state.pre_filled_prompt = "Gere ideias para um projeto de aplicativo de finanças."
+        st.session_state.new_pre_filled_prompt = "Gere ideias para um projeto de aplicativo de finanças."
+        st.session_state.pre_filled_prompt_key += 1
         st.experimental_rerun()
 
     if st.button("👨‍💻 Programação"):
         st.session_state.messages = []
-        st.session_state.pre_filled_prompt = "Qual a diferença entre Python e JavaScript?"
+        st.session_state.new_pre_filled_prompt = "Qual a diferença entre Python e JavaScript?"
+        st.session_state.pre_filled_prompt_key += 1
         st.experimental_rerun()
 
     if st.button("🌍 Notícias/Atualidades"):
         st.session_state.messages = []
-        st.session_state.pre_filled_prompt = "Quais as notícias mais importantes de hoje?"
+        st.session_state.new_pre_filled_prompt = "Quais as notícias mais importantes de hoje?"
+        st.session_state.pre_filled_prompt_key += 1
         st.experimental_rerun()
 
     if st.button("🤔 Curiosidades"):
         st.session_state.messages = []
-        st.session_state.pre_filled_prompt = "Me diga uma curiosidade interessante sobre o espaço."
+        st.session_state.new_pre_filled_prompt = "Me diga uma curiosidade interessante sobre o espaço."
+        st.session_state.pre_filled_prompt_key += 1
         st.experimental_rerun()
 
     if st.button("❤️‍🩹 Bem-Estar"):
         st.session_state.messages = []
-        st.session_state.pre_filled_prompt = "Dê dicas para melhorar a qualidade do sono."
+        st.session_state.new_pre_filled_prompt = "Dê dicas para melhorar a qualidade do sono."
+        st.session_state.pre_filled_prompt_key += 1
         st.experimental_rerun()
 
     if st.button("🎲 Jogos/Entretenimento"):
         st.session_state.messages = []
-        st.session_state.pre_filled_prompt = "Sugira um jogo online gratuito divertido."
+        st.session_state.new_pre_filled_prompt = "Sugira um jogo online gratuito divertido."
+        st.session_state.pre_filled_prompt_key += 1
         st.experimental_rerun()
 
     st.markdown("---") # Outra linha divisória
 
     # Botão Limpar Conversa (dentro da sidebar para organizar melhor)
-    if st.button("Limpar Conversa"): # Pode ter um texto diferente para diferenciar dos outros botões
-        st.session_state.messages = []  # Zera o histórico de mensagens
-        st.session_state.pre_filled_prompt = "" # Limpa também o prompt pré-preenchido
-        st.experimental_rerun()         # Recarrega o aplicativo para refletir a mudança
+    if st.button("Limpar Conversa"):
+        st.session_state.messages = []
+        # Para limpar o chat_input quando o botão limpar é clicado
+        if "new_pre_filled_prompt" in st.session_state:
+            del st.session_state.new_pre_filled_prompt
+        st.session_state.pre_filled_prompt_key += 1 # Garante que o input será resetado
+        st.experimental_rerun()
 
     st.markdown("---") # Mais uma linha divisória
-    st.write("Desenvolvido por Bruno Gabriel") # Sua assinatura
+    st.write("Desenvolvido por Bruno Gabriel")
