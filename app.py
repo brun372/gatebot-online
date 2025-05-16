@@ -75,6 +75,7 @@ def process_question(question):
 
 # --- Entrada de Texto para o Usuário (Área Principal) ---
 # O chat_input continua funcionando normalmente para perguntas digitadas.
+# Removendo 'value' e 'on_change' diretamente aqui para evitar TypeError.
 prompt = st.chat_input("Pergunte algo ao GATEBOT...")
 
 if prompt:
