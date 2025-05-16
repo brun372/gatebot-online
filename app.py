@@ -1,7 +1,7 @@
 import streamlit as st
 from gemini_utility import get_gemini_response, configure_api_key
 
-# Configura a API Key do Gemini usando st.secrets (boa prática de segurança)
+# Configura a API Key do Gemini usando st.secrets
 configure_api_key()
 
 # --- Configurações da Página ---
@@ -18,9 +18,19 @@ st.markdown("""
     .st-emotion-cache-1pxazr6 {
         color: white;
     }
-    /* Estilo para links ou elementos interativos na sidebar, caso existam */
-    .st-emotion-cache-1km1mho a {
-        color: #8D8DFF; /* Um azul mais claro para links */
+    /* Estilo para os botões da sidebar (cor do texto e do fundo ao passar o mouse) */
+    .st-emotion-cache-1km1mho button {
+        color: white;
+        background-color: #4A4A4A;
+        width: 100%;
+        margin-bottom: 5px;
+        border: none;
+        text-align: left;
+        padding-left: 10px;
+    }
+    .st-emotion-cache-1km1mho button:hover {
+        background-color: #6A6A6A;
+        color: white;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -47,48 +57,81 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# --- Entrada de Texto para o Usuário (Área Principal) ---
-# A caixa de chat input, sem pré-preenchimento automático.
-prompt = st.chat_input("Pergunte algo ao GATEBOT...")
-
-if prompt:
+# --- Função para Processar uma Pergunta (usada tanto pelo chat_input quanto pelos botões) ---
+def process_question(question):
     # Adiciona a pergunta do usuário ao histórico e exibe
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messages.append({"role": "user", "content": question})
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown(question)
 
     # Gera a resposta do Gemini
     with st.chat_message("assistant"):
-        with st.spinner("Pensando..."): # Mostra um spinner enquanto o Gemini pensa
-            response = get_gemini_response(prompt) # Chama a função que interage com a API do Gemini
-        st.markdown(response) # Exibe a resposta do Gemini
+        with st.spinner("Pensando..."):
+            response = get_gemini_response(question)
+        st.markdown(response)
 
     # Adiciona a resposta do Gemini ao histórico
     st.session_state.messages.append({"role": "assistant", "content": response})
 
+# --- Entrada de Texto para o Usuário (Área Principal) ---
+# O chat_input continua funcionando normalmente para perguntas digitadas.
+prompt = st.chat_input("Pergunte algo ao GATEBOT...")
+
+if prompt:
+    process_question(prompt)
+
 
 # --- Conteúdo da Sidebar (Barra Lateral) ---
-# Tudo dentro do 'with st.sidebar:' aparecerá na barra lateral.
 with st.sidebar:
     st.image("https://raw.githubusercontent.com/brun372/gatebot-online/main/B5w10V3.PNG", width=100) # Mini logo ou robo na sidebar
     st.title("GATEBOT Menu")
-    st.markdown("---") # Linha divisória
+    st.markdown("---")
 
     st.header("Áreas de Conhecimento:")
-    st.write("📚 **Educação:** Perguntas sobre história, ciência, literatura.")
-    st.write("💡 **Ideias:** Brainstorming, criatividade, soluções de problemas.")
-    st.write("👨‍💻 **Programação:** Dúvidas sobre código, lógica, linguagens.")
-    st.write("🌍 **Notícias/Atualidades:** Resumo de eventos, informações gerais.")
-    st.write("🤔 **Curiosidades:** Fatos aleatórios, explicações simples.")
-    st.write("❤️‍🩹 **Bem-Estar:** Dicas de saúde, hobbies, autoajuda.")
-    st.write("🎲 **Jogos/Entretenimento:** Sugestões, regras, informações.")
 
-    st.markdown("---") # Outra linha divisória
+    # Botões para cada área que DISPARAM A PERGUNTA IMEDIATAMENTE
+    # Ao clicar, limpa o histórico e envia uma pergunta pré-definida.
+    if st.button("📚 Educação"):
+        st.session_state.messages = [] # Limpa histórico para nova conversa sobre o tema
+        process_question("Me conte sobre a Segunda Guerra Mundial.")
+        st.experimental_rerun() # Recarrega para mostrar o novo histórico e a resposta
+
+    if st.button("💡 Ideias"):
+        st.session_state.messages = []
+        process_question("Gere ideias para um projeto de aplicativo de finanças.")
+        st.experimental_rerun()
+
+    if st.button("👨‍💻 Programação"):
+        st.session_state.messages = []
+        process_question("Qual a diferença entre Python e JavaScript?")
+        st.experimental_rerun()
+
+    if st.button("🌍 Notícias/Atualidades"):
+        st.session_state.messages = []
+        process_question("Quais as notícias mais importantes de hoje?")
+        st.experimental_rerun()
+
+    if st.button("🤔 Curiosidades"):
+        st.session_state.messages = []
+        process_question("Me diga uma curiosidade interessante sobre o espaço.")
+        st.experimental_rerun()
+
+    if st.button("❤️‍🩹 Bem-Estar"):
+        st.session_state.messages = []
+        process_question("Dê dicas para melhorar a qualidade do sono.")
+        st.experimental_rerun()
+
+    if st.button("🎲 Jogos/Entretenimento"):
+        st.session_state.messages = []
+        process_question("Sugira um jogo online gratuito divertido.")
+        st.experimental_rerun()
+
+    st.markdown("---")
 
     # Botão Limpar Conversa (dentro da sidebar)
     if st.button("Limpar Conversa"):
-        st.session_state.messages = []  # Zera o histórico de mensagens
-        st.experimental_rerun()         # Recarrega o aplicativo para refletir a mudança
+        st.session_state.messages = []
+        st.experimental_rerun() # Recarrega o aplicativo para refletir a mudança
 
-    st.markdown("---") # Mais uma linha divisória
-    st.write("Desenvolvido por Bruno Gabriel") # Sua assinatura
+    st.markdown("---")
+    st.write("Desenvolvido por Bruno Gabriel")
