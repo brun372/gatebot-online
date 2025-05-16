@@ -14,7 +14,7 @@ st.header("Seu Assistente de IA com Google Gemini")
 # você precisará primeiro fazer upload dela para um serviço como Imgur ou GitHub Gist (e obter o link RAW)
 # ou para dentro do seu próprio repositório GitHub e pegar o link RAW dela.
 # Por exemplo, se fosse uma imagem online:
-st.image("https://i.imgur.com/B5w10V3.jpeg", caption="Bem-vindo ao GATEBOT!", width=300)
+st.image(""https://i.imgur.com/B5w10V3.jpeg"", caption="Bem-vindo ao GATEBOT!", width=300)
 # Usei um placeholder de imagem do Unsplash. SUBSTITUA PELO SEU LINK!
 
 st.write("🌟 Ei! Tudo bem? Eu sou o GATEBOT, seu parceiro virtual. 😉")
