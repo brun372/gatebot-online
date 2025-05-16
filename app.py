@@ -1,5 +1,4 @@
-
-]import streamlit as st
+import streamlit as st
 from gemini_utility import get_gemini_response, configure_api_key
 
 # Configura a API Key do Gemini usando st.secrets
