@@ -1,103 +1,132 @@
 import streamlit as st
-from gemini_utility import get_gemini_response, configure_api_key
+import google.generativeai as genai
+import os
 
-# Configura a API Key do Gemini usando st.secrets (boa prática de segurança)
-configure_api_key()
+# --- Configuração do Streamlit ---
+st.set_page_config(page_title="GATEBOT: Seu Assistente de IA")
 
-# --- Configurações da Página ---
-st.set_page_config(page_title="GATEBOT - Seu Assistente de IA", page_icon="🤖")
-
-# --- CSS Personalizado para a Sidebar ---
-st.markdown("""
-<style>
-    /* Estilo para a cor de fundo da sidebar. */
-    .st-emotion-cache-nahz7x {
-        background-color: #262730;
-    }
-    /* Estilo para o texto do sidebar. */
-    .st-emotion-cache-1pxazr6 {
-        color: white;
-    }
-    /* Estilo para botões na sidebar (cor do texto e do fundo ao passar o mouse) */
-    .st-emotion-cache-1km1mho button {
-        color: white;
-        background-color: #4A4A4A;
-        width: 100%;
-        margin-bottom: 5px;
-        border: none;
-        text-align: left;
-        padding-left: 10px;
-    }
-    .st-emotion-cache-1km1mho button:hover {
-        background-color: #6A6A6A;
-        color: white;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-
-# --- Título e Imagem de Capa (Área Principal) ---
-st.title("GATEBOT")
+st.title("🤖 GATEBOT")
 st.header("Seu Assistente de IA com Google Gemini")
 
-# A imagem de capa do GATEBOT, hospedada no GitHub.
-st.image("https://raw.githubusercontent.com/brun372/gatebot-online/main/B5w10V3.PNG", caption="Seu amigo digital para qualquer desafio", width=300)
+# --- Adicionando a Imagem de "Capa" para o Chat ---
+# IMPORTANTE: Você precisa substituir "URL_DA_SUA_IMAGEM_AQUI" pelo link REAL da imagem que você quer usar.
+# Se você quiser usar a imagem "ChatGPT Image 16 de mai. de 2025, 08_55_28.png",
+# você precisará primeiro fazer upload dela para um serviço como Imgur ou GitHub Gist (e obter o link RAW)
+# ou para dentro do seu próprio repositório GitHub e pegar o link RAW dela.
+# Por exemplo, se fosse uma imagem online:
+st.image("https://raw.githubusercontent.com/brun372/gatebot-online/main/B5w10V3.PNG", caption="Bem-vindo ao GATEBOT!", width=300)
+# Usei um placeholder de imagem do Unsplash. SUBSTITUA PELO SEU LINK!
 
-# --- Mensagem de Boas-Vindas (Área Principal) ---
-st.write("Bem-vindo ao GATEBOT!")
-st.write("⭐ Ei! Tudo bem? Eu sou o GATEBOT, seu parceiro virtual. 😉")
+st.write("🌟 Ei! Tudo bem? Eu sou o GATEBOT, seu parceiro virtual. 😉")
 st.write("Tô aqui pra trocar ideia e te ajudar no que for possível!")
 
-# --- Inicialização do Histórico de Conversa (Session State) ---
-if 'messages' not in st.session_state:
-    st.session_state.messages = []
+# --- Configuração da API do Google Gemini (Lendo de VARIÁVEL DE AMBIENTE) ---
+API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# --- Exibir Histórico de Conversa (Área Principal) ---
-for message in st.session_state.messages:
+if not API_KEY:
+    st.error("❌ ERRO: Sua chave de API `GOOGLE_API_KEY` não foi carregada.")
+    st.info("Por favor, configure `GOOGLE_API_KEY` com sua chave real nos 'Secrets' do Streamlit Cloud.")
+    st.stop()
+
+genai.configure(api_key=API_KEY)
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+# --- Seleção da Área no Sidebar ---
+st.sidebar.header("Escolha sua área:")
+area_escolhida = st.sidebar.radio(
+    "Em qual dessas áreas você mais precisa de uma força?",
+    ("💻 Tecnologia (TI)", "🏥 Saúde e bem-estar", "📚 Estudos e Educação", "💸 Dinheiro e Finanças", "🤔 Outra coisa")
+)
+
+st.sidebar.write(f"Sua área selecionada: **{area_escolhida}**")
+
+# Inicializa o histórico do chat se não existir na sessão
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+    st.session_state.chat_session = model.start_chat(history=[])
+
+# Exibe o histórico do chat (incluindo imagens se houver)
+for message in st.session_state.chat_history:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+        if "image_url" in message:
+            st.image(message["image_url"], caption=message.get("image_caption", ""))
 
-# --- Entrada de Texto para o Usuário (Área Principal) ---
-prompt = st.chat_input("Pergunte algo ao GATEBOT...")
+# --- Função para simular pesquisa de imagem (VOCÊ PODE SUBSTITUIR POR UMA API REAL) ---
+def get_image_from_query(query_text):
+    # Esta é uma SIMULAÇÃO para fins de demonstração.
+    # Para uma funcionalidade REAL de busca de imagens, você precisaria integrar uma API
+    # como a Google Custom Search API, Bing Image Search API, etc.
+    # Exemplo:
+    # from Google Search_api import search_image # Se você tivesse uma integração real
 
-if prompt:
-    # Adiciona a pergunta do usuário ao histórico e exibe
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    query_text_lower = query_text.lower()
+    if "gato" in query_text_lower:
+        return "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg", "Um gato fofo"
+    elif "cachorro" in query_text_lower:
+        return "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Canis_lupus_familiaris_%28Linnaeus%2C_1758%29.jpg/1200px-Canis_lupus_familiaris_%28Linnaeus%2C_1758%29.jpg", "Um cachorro amigável"
+    elif "computador" in query_text_lower:
+        return "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Computer_desktop_icon.svg/1024px-Computer_desktop_icon.svg.png", "Um computador desktop"
+    elif "lua" in query_text_lower:
+        return "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/FullMoon2010.jpg/1200px-FullMoon2010.jpg", "A Lua Cheia"
+    elif "sol" in query_text_lower:
+        return "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Solar_Prominence_from_STEREO_--_September_29%2C_2008.jpg/1200px-Solar_Prominence_from_STEREO_--_September_29%2C_2008.jpg", "O Sol"
+    else:
+        return None, None
+
+# --- Entrada de Perguntas (Chat Input) ---
+user_query = st.chat_input("Qual é a sua dúvida ou problema? (Digite 'experty' para encerrar)")
+
+if user_query:
+    st.session_state.chat_history.append({"role": "user", "content": user_query})
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown(user_query)
 
-    # Gera a resposta do Gemini
-    with st.chat_message("assistant"):
-        with st.spinner("Pensando..."):
-            response = get_gemini_response(prompt)
-        st.markdown(response)
+    if user_query.lower() == 'experty':
+        st.session_message = st.chat_message("ai")
+        st.session_message.markdown("👋 Foi ótimo conversar com você! Até a próxima! 😊")
+        st.session_state.chat_history.append({"role": "ai", "content": "👋 Foi ótimo conversar com você! Até a próxima! 😊"})
+        st.stop()
 
-    # Adiciona a resposta do Gemini ao histórico
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.session_message = st.chat_message("ai")
+    with st.spinner("🤔 Deixa eu pensar um pouquinho..."):
+        try:
+            prompt_instruction = (
+                f"Você é um assistente virtual chamado GATEBOT. O usuário escolheu a área de '{area_escolhida}'. "
+                "Responda à seguinte pergunta de forma útil, amigável, completa e detalhada, "
+                "mas sempre organizando o texto com parágrafos claros e, se possível, listas ou tópicos para facilitar a leitura. "
+                "Use negritos para destacar informações importantes. "
+                "Mantenha um tom acessível, como se estivesse explicando para alguém que está começando. "
+                "Se a pergunta for sobre um tópico fora de '{area_escolhida}', mencione isso de forma clara e breve antes de prosseguir com a resposta."
+                "Se o usuário pedir por uma imagem (ex: 'mostre uma imagem de'), tente encontrar uma imagem relacionada. Use frases como 'Aqui está uma imagem de...'."
+            )
 
+            # Primeiro, tenta obter uma resposta de texto do Gemini
+            response = st.session_state.chat_session.send_message(f"{prompt_instruction}\nPergunta: {user_query}")
+            ai_response = response.text
 
-# --- Conteúdo da Sidebar (Barra Lateral) ---
-with st.sidebar:
-    st.image("https://raw.githubusercontent.com/brun372/gatebot-online/main/B5w10V3.PNG", width=100) # Mini logo ou robo na sidebar
-    st.title("GATEBOT Menu")
-    st.markdown("---")
+            st.session_message.markdown(ai_response)
+            st.session_state.chat_history.append({"role": "ai", "content": ai_response})
 
-    st.header("Áreas de Conhecimento:")
-    # Áreas de conhecimento como texto, sem funcionalidade de clique para perguntar
-    st.write("📚 **Educação:** Perguntas sobre história, ciência, literatura.")
-    st.write("💡 **Ideias:** Brainstorming, criatividade, soluções de problemas.")
-    st.write("👨‍💻 **Programação:** Dúvidas sobre código, lógica, linguagens.")
-    st.write("🌍 **Notícias/Atualidades:** Resumo de eventos, informações gerais.")
-    st.write("🤔 **Curiosidades:** Fatos aleatórios, explicações simples.")
-    st.write("❤️‍🩹 **Bem-Estar:** Dicas de saúde, hobbies, autoajuda.")
-    st.write("🎲 **Jogos/Entretenimento:** Sugestões, regras, informações.")
+            # --- Lógica para pesquisa de imagens ---
+            # Verifica se o usuário pediu uma imagem. Você pode refinar as palavras-chave.
+            if any(phrase in user_query.lower() for phrase in ["imagem", "foto", "mostre uma foto", "mostre uma imagem"]):
+                # Extrai o que o usuário quer ver na imagem
+                image_search_query = user_query.lower()
+                image_search_query = image_search_query.replace("mostre uma imagem de", "").replace("imagem de", "").replace("foto de", "").strip()
+                
+                # Chama a função simulada de pesquisa de imagem
+                image_url, image_caption = get_image_from_query(image_search_query)
 
-    st.markdown("---")
+                if image_url:
+                    st.image(image_url, caption=f"Imagem relacionada a: {image_caption}")
+                    # Adiciona a imagem ao histórico de forma que possa ser reexibida
+                    st.session_state.chat_history.append({"role": "ai", "image_url": image_url, "image_caption": image_caption})
+                else:
+                    st.session_message.markdown("Desculpe, não consegui encontrar uma imagem para isso no momento na minha base simulada.")
+                    st.session_state.chat_history.append({"role": "ai", "content": "Desculpe, não consegui encontrar uma imagem para isso no momento na minha base simulada."})
 
-    # Botão Limpar Conversa (continua funcionando)
-    if st.button("Limpar Conversa"):
-        st.session_state.messages = []
-        st.experimental_rerun()
-
-    st.markdown("---")
-    st.write("Desenvolvido por Bruno Gabriel")
+        except Exception as e:
+            error_message = f"Desculpe, algo deu errado ao tentar obter uma resposta (Erro: {e}). Verifique sua conexão com a internet e se sua chave de API está correta e ativa. Detalhe: {e}"
+            st.session_message.error(error_message)
+            st.session_state.chat_history.append({"role": "ai", "content": error_message})
