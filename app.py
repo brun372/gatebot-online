@@ -1,4 +1,5 @@
-import streamlit as st
+
+]import streamlit as st
 from gemini_utility import get_gemini_response, configure_api_key
 
 # Configura a API Key do Gemini usando st.secrets
@@ -75,7 +76,7 @@ def process_question(question):
 
 # --- Entrada de Texto para o Usuário (Área Principal) ---
 # O chat_input continua funcionando normalmente para perguntas digitadas.
-# Removendo 'value' e 'on_change' diretamente aqui para evitar TypeError.
+# Não adicionamos 'value' ou 'on_change' para evitar o TypeError.
 prompt = st.chat_input("Pergunte algo ao GATEBOT...")
 
 if prompt:
